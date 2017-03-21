@@ -144,6 +144,8 @@ static const MpseApi cpm_api =
     cpm_dtor,
     cpm_init,
     cpm_print,
+    nullptr,
+    nullptr,
 };
 
 #ifdef BUILDING_SO

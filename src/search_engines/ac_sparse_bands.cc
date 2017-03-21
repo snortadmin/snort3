@@ -123,6 +123,8 @@ static const MpseApi acsb_api =
     acsb_dtor,
     acsb_init,
     acsb_print,
+    nullptr,
+    nullptr,
 };
 
 const BaseApi* se_ac_sparse_bands = &acsb_api.base;
