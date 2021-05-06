@@ -82,6 +82,7 @@ SO_PUBLIC const SnortPacket* get_packet()
     lua_packet.num = packet->context->packet_number;
     lua_packet.sp = packet->ptrs.sp;
     lua_packet.dp = packet->ptrs.dp;
+    lua_packet.dst_addr = "";
 
     if ( !(packet->proto_bits & PROTO_BIT__ETH) ) {
         lua_packet.ether_dst = lua_packet.ether_src = "";
@@ -103,6 +104,12 @@ SO_PUBLIC const SnortPacket* get_packet()
         eh->ether_dst[4], eh->ether_dst[5]);
 
     lua_packet.ether_dst = (const char*)eth_dst;
+
+    if ( packet->has_ip() or packet->is_data() ) {
+        static char ip[50];
+        packet->ptrs.ip_api.get_dst()->ntop(ip, 50);
+        lua_packet.dst_addr = ip;
+    }
 
     return &lua_packet;
 }
