@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "protocols/eth.h"
 #include "detection/ips_context.h"
 #include "detection/signature.h"
 #include "events/event.h"
@@ -81,6 +82,34 @@ SO_PUBLIC const SnortPacket* get_packet()
     lua_packet.num = packet->context->packet_number;
     lua_packet.sp = packet->ptrs.sp;
     lua_packet.dp = packet->ptrs.dp;
+    lua_packet.dst_addr = "";
+
+    if ( !(packet->proto_bits & PROTO_BIT__ETH) ) {
+        lua_packet.ether_dst = lua_packet.ether_src = "";
+        return &lua_packet;
+    }
+
+    static char eth_src[20], eth_dst[20];
+
+    const eth::EtherHdr* eh = layer::get_eth_layer( packet );
+
+    snprintf(eth_src, 20, "%02X:%02X:%02X:%02X:%02X:%02X", eh->ether_src[0],
+        eh->ether_src[1], eh->ether_src[2], eh->ether_src[3],
+        eh->ether_src[4], eh->ether_src[5]);
+
+    lua_packet.ether_src = (const char*)eth_src;
+
+    snprintf(eth_dst, 20, "%02X:%02X:%02X:%02X:%02X:%02X", eh->ether_dst[0],
+        eh->ether_dst[1], eh->ether_dst[2], eh->ether_dst[3],
+        eh->ether_dst[4], eh->ether_dst[5]);
+
+    lua_packet.ether_dst = (const char*)eth_dst;
+
+    if ( packet->has_ip() or packet->is_data() ) {
+        static char ip[50];
+        packet->ptrs.ip_api.get_dst()->ntop(ip, 50);
+        lua_packet.dst_addr = ip;
+    }
 
     return &lua_packet;
 }
